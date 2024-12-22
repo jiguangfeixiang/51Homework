@@ -1,9 +1,9 @@
 #include <REGX52.H>
 
 //引脚定义
-sbit DS1302_SCLK=P3^1;
-sbit DS1302_IO=P3^2;
-sbit DS1302_CE=P3^0;
+sbit DS1302_SCLK=P2^6;
+sbit DS1302_IO=P2^7;
+sbit DS1302_CE=P2^5;
 
 //寄存器写入地址/指令定义
 #define DS1302_SECOND		0x80
