@@ -1,4 +1,4 @@
-C51 COMPILER V9.54   MAIN                                                                  12/22/2024 16:15:30 PAGE 1   
+C51 COMPILER V9.54   MAIN                                                                  12/22/2024 17:18:10 PAGE 1   
 
 
 C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
@@ -9,7 +9,7 @@ COMPILER INVOKED BY: D:\app\keil_51\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BRO
 line level    source
 
    1          #include <REGX52.H>
-   2          #include "LCD.h"
+   2          #include "LCD1602.h"
    3          #include "port.h"
    4          #include "DS18B20.h"
    5          #include "Delay.h"
@@ -21,107 +21,128 @@ line level    source
   11          void Temp_Show();
   12          void Time_Set();
   13          void TimeShow(void);
-  14          uchar KeyNum = 0, MODE, TimeSetSelect, TimeSetFlashFlag;
-  15          float T;
-  16          unsigned char Time[16];
-  17          char tmp_show[10];
-  18          int count = 0;
-  19          int main()
-  20          {
-  21   1          Read_Temp();
-  22   1          LCD_Init();
-  23   1          Timer0Init();
-  24   1          DS1302_Init();
-  25   1          Delay(1000);
-  26   1          LCD_Printf(1, 0, "  :  :  ");
+  14          void Night_Off_RL1(void);
+  15          uchar KeyNum = 0, MODE, TimeSetSelect, TimeSetFlashFlag;
+  16          float T;
+  17          unsigned char Time[16];
+  18          char tmp_show[10];
+  19          int count = 0, night_flag = 0;
+  20          int main()
+  21          {
+  22   1          Read_Temp();
+  23   1          LCD_Init();
+  24   1          Timer0Init();
+  25   1          DS1302_Init();
+  26   1          Delay(1000);
   27   1          DS1302_SetTime();
-  28   1          while (1) {
-  29   2              // 读取按键设置时间
-  30   2              // KeyNum = Key();
-  31   2              // if (KeyNum == 1) {
-  32   2              //     if (MODE == 0) {
-  33   2              //         MODE = 1;
-  34   2              //         TimeShow();
-  35   2              //     }
-  36   2              //     if (MODE == 1) {
-  37   2              //         MODE = 0;
-  38   2              //         Time_Set();
-  39   2              //     }
-  40   2              // }
-  41   2              TimeShow();
-  42   2              // 温度展示
-  43   2              Temp_Show();
-  44   2          }
-  45   1      }
-  46          void Read_Temp()
-  47          {
-  48   1          DS18B20_ConvertT();
-  49   1          T = DS18B20_ReadT();
-  50   1      }
-  51          // void Timer0_Routine() interrupt 1
-  52          // {
-  53          //     static unsigned int T0Count;
-  54          //     TL0 = 0x18; // 设置定时初值
-C51 COMPILER V9.54   MAIN                                                                  12/22/2024 16:15:30 PAGE 2   
+  28   1          LCD_ShowString(2, 1, "  :  :  ");
+  29   1          while (1) {
+  30   2              // 读取按键设置时间
+  31   2              // KeyNum = Key();
+  32   2              // if (KeyNum == 1) {
+  33   2              //     if (MODE == 0) {
+  34   2              //         MODE = 1;
+  35   2              //         TimeShow();
+  36   2              //     }
+  37   2              //     if (MODE == 1) {
+  38   2              //         MODE = 0;
+  39   2              //         Time_Set();
+  40   2              //     }
+  41   2              // }
+  42   2              // 时间展示
+  43   2              TimeShow();
+  44   2              // 温度展示
+  45   2              Temp_Show();
+  46   2              // 夜晚控制
+  47   2              Night_Off_RL1();
+  48   2          }
+  49   1      }
+  50          void Read_Temp()
+  51          {
+  52   1          DS18B20_ConvertT();
+  53   1          T = DS18B20_ReadT();
+  54   1      }
+C51 COMPILER V9.54   MAIN                                                                  12/22/2024 17:18:10 PAGE 2   
 
-  55          //     TH0 = 0xFC; // 设置定时初值
-  56          //     T0Count++;
-  57          //     if (T0Count >= 500) // 每500ms进入一次
-  58          //     {
-  59          //         T0Count          = 0;
-  60          //         TimeSetFlashFlag = !TimeSetFlashFlag; // 闪烁标志位取反
-  61          //     }
-  62          // }
-  63          void Temp_Show()
-  64          {
-  65   1          Read_Temp();
-  66   1      
-  67   1          sprintf(tmp_show, "temp:%.1f", T);
-  68   1          LCD_Printf(0, 0, tmp_show);
-  69   1          if (T<Temp_low | T> Temp_high) {
-  70   2              BUZZER = 1;
-  71   2              // 温度控制
-  72   2              if (T < Temp_low) {
-  73   3      
-  74   3                  LCD_Printf(0, 9, "  cold!");
-  75   3                  RL1   = 1;
-  76   3                  count = 1;
-  77   3      
-  78   3              } else if (T > Temp_high) {
-  79   3                  LCD_Printf(0, 9, "  hot!");
-  80   3                  count = 1;
-  81   3                  RL1   = 0;
-  82   3              }
-  83   2          } else {
-  84   2              if (count == 1) {
-  85   3                  count = 0;
-  86   3                  LCD_Printf(0, 9, "                "); // 清空第 1 行（16 个空格）
-  87   3              }
-  88   2              LCD_Printf(0, 9, " Normal!"); // 显示 "Normal!"
-  89   2              BUZZER = 0;
-  90   2              RL1    = 0;
-  91   2          }
-  92   1      }
-  93          void TimeShow(void) // 时间显示功能
-  94          {
-  95   1          DS1302_ReadTime(); // 读取时间
-  96   1          // LCD_ShowNum(1,1,DS1302_Time[0],2);//显示年
-  97   1          // LCD_ShowNum(1,4,DS1302_Time[1],2);//显示月
-  98   1          // LCD_ShowNum(1,7,DS1302_Time[2],2);//显示日
-  99   1          // LCD_ShowNum(2,1,DS1302_Time[3],2);//显示时
- 100   1          // LCD_ShowNum(2,4,DS1302_Time[4],2);//显示分
- 101   1          // LCD_ShowNum(2,7,DS1302_Time[5],2);//显示秒
- 102   1          sprintf(Time, "%02d:%02d:%02d", DS1302_Time[3], DS1302_Time[4], DS1302_Time[5]);
- 103   1          LCD_Printf(1, 0, Time);
- 104   1      }
+  55          // void Timer0_Routine() interrupt 1
+  56          // {
+  57          //     static unsigned int T0Count;
+  58          //     TL0 = 0x18; // 设置定时初值
+  59          //     TH0 = 0xFC; // 设置定时初值
+  60          //     T0Count++;
+  61          //     if (T0Count >= 500) // 每500ms进入一次
+  62          //     {
+  63          //         T0Count          = 0;
+  64          //         TimeSetFlashFlag = !TimeSetFlashFlag; // 闪烁标志位取反
+  65          //     }
+  66          // }
+  67          void Night_Off_RL1(void)
+  68          {
+  69   1          if (DS1302_Time[3] >= 22 | DS1302_Time[3] <= 7) {
+  70   2              RL1        = 0;
+  71   2              BUZZER     = 0; // 晚上22-早上7点关掉加热，蜂鸣器不响
+  72   2              night_flag = 1;
+  73   2          } else {
+  74   2              night_flag = 0;
+  75   2          }
+  76   1      }
+  77          void Temp_Show()
+  78          {
+  79   1          Read_Temp();
+  80   1      
+  81   1          sprintf(tmp_show, "temp:%.1f", T);
+  82   1          LCD_ShowString(1, 0, tmp_show);
+  83   1          if (T<Temp_low | T> Temp_high) {
+  84   2              if (night_flag == 0) {
+  85   3                  BUZZER = 1;
+  86   3              }
+  87   2              // 温度控制
+  88   2              if (T < Temp_low) {
+  89   3      
+  90   3                  LCD_ShowString(1, 9, "  cold!");
+  91   3                  RL1   = 1;
+  92   3                  count = 1;
+  93   3      
+  94   3              } else if (T > Temp_high) {
+  95   3                  LCD_ShowString(1, 9, "  hot!");
+  96   3                  count = 1;
+  97   3                  RL1   = 0;
+  98   3              }
+  99   2          } else {
+ 100   2              if (count == 1) {
+ 101   3                  count = 0;
+ 102   3                  LCD_ShowString(1, 9, "                "); // 清空第 1 行（16 个空格）
+ 103   3              }
+ 104   2              LCD_ShowString(1, 9, " Normal!"); // 显示 "Normal!"
+ 105   2              BUZZER = 0;
+ 106   2              RL1    = 0;
+ 107   2          }
+ 108   1      }
+ 109          void TimeShow(void) // 时间显示功能
+ 110          {
+ 111   1          DS1302_ReadTime();                    // 读取时间
+ 112   1                                                // LCD_ShowNum(1,1,DS1302_Time[0],2);//显示年
+ 113   1                                                // LCD_ShowNum(1,4,DS1302_Time[1],2);//显示月
+ 114   1                                                // LCD_ShowNum(1,7,DS1302_Time[2],2);//显示日
+ 115   1                                                // LCD_ShowNum(2,1,DS1302_Time[3],2);//显示时
+ 116   1                                                // LCD_ShowNum(2,4,DS1302_Time[4],2);//显示分
+C51 COMPILER V9.54   MAIN                                                                  12/22/2024 17:18:10 PAGE 3   
+
+ 117   1                                                // LCD_ShowNum(2,7,DS1302_Time[5],2);//显示秒
+ 118   1                                                // DS1302_Time[5] = DS1302_Time[5] / 16 * 10 + DS1302_Time[5] % 
+             -16;
+ 119   1          LCD_ShowNum(2, 1, DS1302_Time[3], 2); // 显示时
+ 120   1          LCD_ShowNum(2, 4, DS1302_Time[4], 2); // 显示分
+ 121   1          LCD_ShowNum(2, 7, DS1302_Time[5], 2); // 显示秒
+ 122   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    339    ----
-   CONSTANT SIZE    =     75    ----
+   CODE SIZE        =    412    ----
+   CONSTANT SIZE    =     60    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =     36    ----
+   DATA SIZE        =     38    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.

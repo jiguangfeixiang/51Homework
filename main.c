@@ -1,5 +1,5 @@
 #include <REGX52.H>
-#include "LCD.h"
+#include "LCD1602.h"
 #include "port.h"
 #include "DS18B20.h"
 #include "Delay.h"
@@ -11,11 +11,12 @@ void Read_Temp();
 void Temp_Show();
 void Time_Set();
 void TimeShow(void);
+void Night_Off_RL1(void);
 uchar KeyNum = 0, MODE, TimeSetSelect, TimeSetFlashFlag;
 float T;
 unsigned char Time[16];
 char tmp_show[10];
-int count = 0;
+int count = 0, night_flag = 0;
 int main()
 {
     Read_Temp();
@@ -23,8 +24,8 @@ int main()
     Timer0Init();
     DS1302_Init();
     Delay(1000);
-    LCD_Printf(1, 0, "  :  :  ");
     DS1302_SetTime();
+    LCD_ShowString(2, 1, "  :  :  ");
     while (1) {
         // 读取按键设置时间
         // KeyNum = Key();
@@ -38,9 +39,12 @@ int main()
         //         Time_Set();
         //     }
         // }
+        // 时间展示
         TimeShow();
         // 温度展示
         Temp_Show();
+        // 夜晚控制
+        Night_Off_RL1();
     }
 }
 void Read_Temp()
@@ -60,45 +64,59 @@ void Read_Temp()
 //         TimeSetFlashFlag = !TimeSetFlashFlag; // 闪烁标志位取反
 //     }
 // }
+void Night_Off_RL1(void)
+{
+    if (DS1302_Time[3] >= 22 | DS1302_Time[3] <= 7) {
+        RL1        = 0;
+        BUZZER     = 0; // 晚上22-早上7点关掉加热，蜂鸣器不响
+        night_flag = 1;
+    } else {
+        night_flag = 0;
+    }
+}
 void Temp_Show()
 {
     Read_Temp();
 
     sprintf(tmp_show, "temp:%.1f", T);
-    LCD_Printf(0, 0, tmp_show);
+    LCD_ShowString(1, 0, tmp_show);
     if (T<Temp_low | T> Temp_high) {
-        BUZZER = 1;
+        if (night_flag == 0) {
+            BUZZER = 1;
+        }
         // 温度控制
         if (T < Temp_low) {
 
-            LCD_Printf(0, 9, "  cold!");
+            LCD_ShowString(1, 9, "  cold!");
             RL1   = 1;
             count = 1;
 
         } else if (T > Temp_high) {
-            LCD_Printf(0, 9, "  hot!");
+            LCD_ShowString(1, 9, "  hot!");
             count = 1;
             RL1   = 0;
         }
     } else {
         if (count == 1) {
             count = 0;
-            LCD_Printf(0, 9, "                "); // 清空第 1 行（16 个空格）
+            LCD_ShowString(1, 9, "                "); // 清空第 1 行（16 个空格）
         }
-        LCD_Printf(0, 9, " Normal!"); // 显示 "Normal!"
+        LCD_ShowString(1, 9, " Normal!"); // 显示 "Normal!"
         BUZZER = 0;
         RL1    = 0;
     }
 }
 void TimeShow(void) // 时间显示功能
 {
-    DS1302_ReadTime(); // 读取时间
-    // LCD_ShowNum(1,1,DS1302_Time[0],2);//显示年
-    // LCD_ShowNum(1,4,DS1302_Time[1],2);//显示月
-    // LCD_ShowNum(1,7,DS1302_Time[2],2);//显示日
-    // LCD_ShowNum(2,1,DS1302_Time[3],2);//显示时
-    // LCD_ShowNum(2,4,DS1302_Time[4],2);//显示分
-    // LCD_ShowNum(2,7,DS1302_Time[5],2);//显示秒
-    sprintf(Time, "%02d:%02d:%02d", DS1302_Time[3], DS1302_Time[4], DS1302_Time[5]);
-    LCD_Printf(1, 0, Time);
+    DS1302_ReadTime();                    // 读取时间
+                                          // LCD_ShowNum(1,1,DS1302_Time[0],2);//显示年
+                                          // LCD_ShowNum(1,4,DS1302_Time[1],2);//显示月
+                                          // LCD_ShowNum(1,7,DS1302_Time[2],2);//显示日
+                                          // LCD_ShowNum(2,1,DS1302_Time[3],2);//显示时
+                                          // LCD_ShowNum(2,4,DS1302_Time[4],2);//显示分
+                                          // LCD_ShowNum(2,7,DS1302_Time[5],2);//显示秒
+                                          // DS1302_Time[5] = DS1302_Time[5] / 16 * 10 + DS1302_Time[5] % 16;
+    LCD_ShowNum(2, 1, DS1302_Time[3], 2); // 显示时
+    LCD_ShowNum(2, 4, DS1302_Time[4], 2); // 显示分
+    LCD_ShowNum(2, 7, DS1302_Time[5], 2); // 显示秒
 }
