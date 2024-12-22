@@ -1,0 +1,96 @@
+C51 COMPILER V9.54   LCD                                                                   12/22/2024 15:40:53 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE LCD
+OBJECT MODULE PLACED IN .\Objects\LCD.obj
+COMPILER INVOKED BY: D:\app\keil_51\C51\BIN\C51.EXE driver\SRC\LCD.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\driver\Include) D
+                    -EBUG OBJECTEXTEND PRINT(.\Listings\LCD.lst) TABS(2) OBJECT(.\Objects\LCD.obj)
+
+line level    source
+
+   1          #include "LCD.h"
+   2          
+   3          // 延时函数
+   4          void DelayMS(uchar ms)
+   5          {
+   6   1          uint i, j;
+   7   1          for (i = 0; i < ms; i++) // 使用 ms 作为循环变量
+   8   1              for (j = 0; j < 112; j++);
+   9   1      }
+  10          
+  11          // 写命令函数
+  12          void LCD_Write_CMD(uchar cmd)
+  13          {
+  14   1          LCD_ENABLE = ~LCD_ENABLE;
+  15   1          LCD_RS     = 0;
+  16   1          LCD_PORT   = cmd; // 传送命令到 LCD_PORT
+  17   1          DelayMS(2);       // 延时 2ms，确保命令稳定传送
+  18   1          LCD_ENABLE = 1;
+  19   1          DelayMS(2); // 再次延时 2ms
+  20   1          LCD_ENABLE = 0;
+  21   1      }
+  22          
+  23          // 写数据函数
+  24          void LCD_Write_DATA(uchar DATA)
+  25          {
+  26   1          LCD_ENABLE = 0;
+  27   1          LCD_RS     = 1;    // rs = 1，表示写数据
+  28   1          LCD_PORT   = DATA; // 传送数据到 LCD_PORT
+  29   1          DelayMS(2);        // 延时 2ms
+  30   1          LCD_ENABLE = 1;
+  31   1          DelayMS(2); // 延时 2ms
+  32   1          LCD_ENABLE = 0;
+  33   1      }
+  34          
+  35          // 设置光标位置
+  36          void LCD_GOTO_XY(uchar x, uchar y)
+  37          {
+  38   1          if (x == 0) {
+  39   2              LCD_Write_CMD(0x80 + y); // 0x80 为地址起始点
+  40   2          } else if (x == 1) {
+  41   2              LCD_Write_CMD(0xC0 + y); // 0xC0 为第二行起始地址
+  42   2          }
+  43   1      }
+  44          
+  45          // 打印字符串
+  46          void LCD_Printf(uchar x,uchar y,uchar *str)
+  47          {
+  48   1          LCD_GOTO_XY(x, y);
+  49   1          while (*str != '\0') {
+  50   2              LCD_Write_DATA(*str++); // 逐个字符写入
+  51   2          }
+  52   1      }
+  53          
+  54          // LCD 初始化
+C51 COMPILER V9.54   LCD                                                                   12/22/2024 15:40:53 PAGE 2   
+
+  55          void LCD_Init()
+  56          {
+  57   1          LCD_Write_CMD(0x38); // 16x2 显示，5x7 点阵，8 位数据口
+  58   1          LCD_Write_CMD(0x0C); // 开启显示，不显示光标
+  59   1          LCD_Write_CMD(0x06); // 地址加1，写入数据后光标右移
+  60   1          LCD_Write_CMD(0x01); // 清屏
+  61   1      }
+  62          
+  63          // LCD 测试
+  64          // void LCD_Test()
+  65          // {
+  66          //     LCD_GOTO_XY(0, 0);
+  67          //     LCD_Printf("Hello World!");
+  68          //     LCD_GOTO_XY(1, 0);
+  69          //     LCD_Printf("test");
+  70          // }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    145    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

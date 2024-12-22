@@ -1,0 +1,24 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.eide": true,
+        "**/Listings": true,
+        "**/Objects": true,
+        "**/*.uvproj": true,
+        "**/*.uvopt": true,
+        "**/.clang-format": true,
+        "**/*.ctx.json": true,
+        "**/*.git*": true,
+        "**/test.uvgui.jiguangfeixiang": true,
+        "**/51大作业*": true,
+    },
+    "search.exclude": {
+        "**/.git": true,
+        "**/.eide": true,
+        "**/.vscode": true,
+        "**/Listings": true,
+        "**/Objects": true,
+        "**/*.uvproj": true,
+        "**/*.uvopt": true
+    }
+}

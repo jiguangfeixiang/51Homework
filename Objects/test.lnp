@@ -1,0 +1,10 @@
+".\Objects\main.obj",
+".\Objects\LCD.obj",
+".\Objects\DS18B20.obj",
+".\Objects\Delay.obj",
+".\Objects\OneWire.obj",
+".\Objects\DS1302.obj",
+".\Objects\Key.obj",
+".\Objects\Timer0.obj" 
+TO ".\Objects\test" 
+PRINT(".\Listings\test.m51")
