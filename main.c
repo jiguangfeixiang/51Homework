@@ -4,24 +4,28 @@
 #include "DS18B20.h"
 #include "Delay.h"
 #include <stdio.h>
-#include "Key.h"
 #include "DS1302.h"
-#include "Timer0.h"
+#include "AT24C02.h"
+#include "UART.h"
 void Read_Temp();
 void Temp_Show();
-void Time_Set();
 void TimeShow(void);
 void Night_Off_RL1(void);
-uchar KeyNum = 0, MODE, TimeSetSelect, TimeSetFlashFlag;
-float T;
-unsigned char Time[16];
-char tmp_show[10];
-int count = 0, night_flag = 0;
+void Show_Reveive_data();
+void Save_Data();
+float T, last_T = 0;
+unsigned char *FLASH_ADRESS = (unsigned char *)0x00;
+unsigned char Time[10], CharCount = 0;
+uchar tmp_show[10];
+char *Receive_String;
+uchar count = 0, night_flag = 0;
+
 int main()
 {
     Read_Temp();
+    Save_Data(); // 温度不一样就开始存储到Flash芯片里 时间格式24:60:60  T(4位)
     LCD_Init();
-    Timer0Init();
+
     DS1302_Init();
     Delay(1000);
     DS1302_SetTime();
@@ -45,6 +49,25 @@ int main()
         Temp_Show();
         // 夜晚控制
         Night_Off_RL1();
+        // 温度不一样就存储到FLASH中
+        Save_Data();
+        // 接收数据并展示
+        Show_Reveive_data();
+    }
+}
+void Show_Reveive_data()
+{
+}
+void Save_Data()
+{
+    uchar i;
+    if (last_T != T) {
+        sprintf((char *)tmp_show, "%02d:%02d:%02d %.1f", DS1302_Time[3], DS1302_Time[4], DS1302_Time[5], T);
+        for (i = 0; tmp_show[i] != '\0'; i++) {
+            AT24C02_WriteByte(*FLASH_ADRESS, tmp_show[i]);
+            FLASH_ADRESS++;
+        }
+        last_T = T;
     }
 }
 void Read_Temp()
@@ -115,8 +138,43 @@ void TimeShow(void) // 时间显示功能
                                           // LCD_ShowNum(2,1,DS1302_Time[3],2);//显示时
                                           // LCD_ShowNum(2,4,DS1302_Time[4],2);//显示分
                                           // LCD_ShowNum(2,7,DS1302_Time[5],2);//显示秒
-                                          // DS1302_Time[5] = DS1302_Time[5] / 16 * 10 + DS1302_Time[5] % 16;
     LCD_ShowNum(2, 1, DS1302_Time[3], 2); // 显示时
     LCD_ShowNum(2, 4, DS1302_Time[4], 2); // 显示分
     LCD_ShowNum(2, 7, DS1302_Time[5], 2); // 显示秒
+}
+/**
+ * @brief  串口中断服务函数
+ * @param  无
+ * @retval 无
+ */
+void UART_ISR() interrupt 4
+{
+    uchar next;
+    // 处理接收中断
+    if (RI) {
+        RI   = 0; // 清接收中断标志
+        next = SBUF;
+        if (next != '\n') {
+            Receive_String[CharCount++] = next;
+
+        } else {
+            Receive_String[CharCount] = '\0';
+            sprintf(Temp_Show, "temp:%s", Receive_String);
+            LCD_ShowString(1, 9, Temp_Show);
+
+            CharCount                 = 0;
+        }
+    }
+    // // 处理发送中断
+    // if (TI) {
+    //     TI = 0; // 清发送中断标志
+
+    //     if (UART_TX_Head != UART_TX_Tail) {
+    //         // 发送下一个字节
+    //         SBUF         = UART_TX_Buffer[UART_TX_Tail];
+    //         UART_TX_Tail = (UART_TX_Tail + 1) % UART_TX_BUFFER_SIZE;
+    //     } else {
+    //         UART_TX_Busy = 0; // 无数据可发送，结束发送
+    //     }
+    // }
 }

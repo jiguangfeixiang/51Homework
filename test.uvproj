@@ -12,14 +12,14 @@
       <ToolsetName>MCS-51</ToolsetName>
       <TargetOption>
         <TargetCommonOption>
-          <Device>AT89C51</Device>
+          <Device>AT89C52</Device>
           <Vendor>Atmel</Vendor>
-          <Cpu>IRAM(0-0x7F) IROM(0-0xFFF) CLOCK(24000000)</Cpu>
+          <Cpu>IRAM(0-0xFF) IROM(0-0x1FFF) CLOCK(24000000)</Cpu>
           <FlashUtilSpec></FlashUtilSpec>
           <StartupFile>"LIB\STARTUP.A51" ("Standard 8051 Startup Code")</StartupFile>
           <FlashDriverDll></FlashDriverDll>
-          <DeviceId>2976</DeviceId>
-          <RegisterFile>REGX51.H</RegisterFile>
+          <DeviceId>2980</DeviceId>
+          <RegisterFile>REGX52.H</RegisterFile>
           <MemoryEnv></MemoryEnv>
           <Cmp></Cmp>
           <Asm></Asm>
@@ -48,7 +48,7 @@
           <OutputName>test</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
-          <CreateHexFile>0</CreateHexFile>
+          <CreateHexFile>1</CreateHexFile>
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
           <ListingPath>.\Listings\</ListingPath>
@@ -109,11 +109,11 @@
           <SimDllName>S8051.DLL</SimDllName>
           <SimDllArguments></SimDllArguments>
           <SimDlgDll>DP51.DLL</SimDlgDll>
-          <SimDlgDllArguments>-p51</SimDlgDllArguments>
+          <SimDlgDllArguments>-p52</SimDlgDllArguments>
           <TargetDllName>S8051.DLL</TargetDllName>
           <TargetDllArguments></TargetDllArguments>
           <TargetDlgDll>TP51.DLL</TargetDlgDll>
-          <TargetDlgDllArguments>-p51</TargetDlgDllArguments>
+          <TargetDlgDllArguments>-p52</TargetDlgDllArguments>
         </DllOption>
         <DebugOption>
           <OPTHX>
@@ -176,7 +176,7 @@
           </Flash1>
           <bUseTDR>0</bUseTDR>
           <Flash2></Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -230,7 +230,7 @@
               <RCB>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x0</Size>
+                <Size>0xffff</Size>
               </RCB>
               <RXB>
                 <Type>0</Type>
@@ -270,12 +270,12 @@
               <IRO>
                 <Type>1</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x1000</Size>
+                <Size>0x2000</Size>
               </IRO>
               <IRA>
                 <Type>0</Type>
                 <StartAddress>0x0</StartAddress>
-                <Size>0x80</Size>
+                <Size>0x100</Size>
               </IRA>
               <XRA>
                 <Type>0</Type>
@@ -311,7 +311,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath></IncludePath>
+              <IncludePath>.\driver\Include</IncludePath>
             </VariousControls>
           </C51>
           <Ax51>
@@ -367,6 +367,61 @@
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\main.c</FilePath>
+            </File>
+            <File>
+              <FileName>port.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\port.h</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>Src</GroupName>
+          <Files>
+            <File>
+              <FileName>DS18B20.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\SRC\DS18B20.c</FilePath>
+            </File>
+            <File>
+              <FileName>Delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\SRC\Delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>OneWire.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\SRC\OneWire.c</FilePath>
+            </File>
+            <File>
+              <FileName>DS1302.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\SRC\DS1302.c</FilePath>
+            </File>
+            <File>
+              <FileName>Timer0.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\SRC\Timer0.c</FilePath>
+            </File>
+            <File>
+              <FileName>LCD1602.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\SRC\LCD1602.c</FilePath>
+            </File>
+            <File>
+              <FileName>UART.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\SRC\UART.c</FilePath>
+            </File>
+            <File>
+              <FileName>I2C.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\SRC\I2C.c</FilePath>
+            </File>
+            <File>
+              <FileName>AT24C02.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\driver\SRC\AT24C02.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -3,8 +3,9 @@
 ".\Objects\Delay.obj",
 ".\Objects\OneWire.obj",
 ".\Objects\DS1302.obj",
-".\Objects\Key.obj",
-".\Objects\Timer0.obj",
-".\Objects\LCD1602.obj" 
+".\Objects\LCD1602.obj",
+".\Objects\UART.obj",
+".\Objects\I2C.obj",
+".\Objects\AT24C02.obj" 
 TO ".\Objects\test" 
-PRINT(".\Listings\test.m51")
+PRINT(".\Listings\test.m51") RAMSIZE(256) 

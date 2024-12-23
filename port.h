@@ -23,5 +23,9 @@ sbit DS1302_RST  = P3 ^ 0;
 sbit DS1302_SCLK = P3 ^ 1;
 sbit DS1302_IO   = P3 ^ 2;
 
+sbit AT24_SCL = P2 ^ 2;
+sbit AT24_SDA = P2 ^ 3;
+sbit COM_TX   = P3 ^ 0;
+sbit COM_RX   = P3 ^ 1;
 #define LCD_PORT P0
 #endif
