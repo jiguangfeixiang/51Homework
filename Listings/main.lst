@@ -1,4 +1,4 @@
-C51 COMPILER V9.54   MAIN                                                                  12/23/2024 11:38:08 PAGE 1   
+C51 COMPILER V9.54   MAIN                                                                  12/23/2024 16:30:59 PAGE 1   
 
 
 C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
@@ -25,7 +25,7 @@ line level    source
   15          void Save_Data();
   16          float T, last_T = 0;
   17          unsigned char *FLASH_ADRESS = (unsigned char *)0x00;
-  18          unsigned char Time[10], CharCount = 0;
+  18          unsigned char CharCount     = 0;
   19          uchar tmp_show[10];
   20          char *Receive_String;
   21          uchar count = 0, night_flag = 0;
@@ -33,11 +33,11 @@ line level    source
   23          int main()
   24          {
   25   1          Read_Temp();
-  26   1          Save_Data(); // 温度不一样就开始存储到Flash芯片里 时间格式24:60:60  T(4位)
+  26   1          // Save_Data(); // 温度不一样就开始存储到Flash芯片里 时间格式24:60:60  T(4位)
   27   1          LCD_Init();
   28   1      
   29   1          DS1302_Init();
-  30   1          Delay(1000);
+  30   1          // Delay(1000);
   31   1          DS1302_SetTime();
   32   1          LCD_ShowString(2, 1, "  :  :  ");
   33   1          while (1) {
@@ -62,147 +62,161 @@ line level    source
   52   2              // 温度不一样就存储到FLASH中
   53   2              Save_Data();
   54   2              // 接收数据并展示
-C51 COMPILER V9.54   MAIN                                                                  12/23/2024 11:38:08 PAGE 2   
+C51 COMPILER V9.54   MAIN                                                                  12/23/2024 16:30:59 PAGE 2   
 
-  55   2              Show_Reveive_data();
+  55   2              // Show_Reveive_data();
   56   2          }
   57   1      }
-  58          void Show_Reveive_data()
-  59          {
-  60   1      }
+  58          // void Show_Reveive_data()
+  59          // {
+  60          // }
   61          void Save_Data()
   62          {
   63   1          uchar i;
-  64   1          if (last_T != T) {
-  65   2              sprintf((char *)tmp_show, "%02d:%02d:%02d %.1f", DS1302_Time[3], DS1302_Time[4], DS1302_Time[5], T
-             -);
-  66   2              for (i = 0; tmp_show[i] != '\0'; i++) {
-  67   3                  AT24C02_WriteByte(*FLASH_ADRESS, tmp_show[i]);
-  68   3                  FLASH_ADRESS++;
-  69   3              }
-  70   2              last_T = T;
-  71   2          }
-  72   1      }
-  73          void Read_Temp()
-  74          {
-  75   1          DS18B20_ConvertT();
-  76   1          T = DS18B20_ReadT();
-  77   1      }
-  78          // void Timer0_Routine() interrupt 1
-  79          // {
-  80          //     static unsigned int T0Count;
-  81          //     TL0 = 0x18; // 设置定时初值
-  82          //     TH0 = 0xFC; // 设置定时初值
-  83          //     T0Count++;
-  84          //     if (T0Count >= 500) // 每500ms进入一次
-  85          //     {
-  86          //         T0Count          = 0;
-  87          //         TimeSetFlashFlag = !TimeSetFlashFlag; // 闪烁标志位取反
-  88          //     }
-  89          // }
-  90          void Night_Off_RL1(void)
-  91          {
-  92   1          if (DS1302_Time[3] >= 22 | DS1302_Time[3] <= 7) {
-  93   2              RL1        = 0;
-  94   2              BUZZER     = 0; // 晚上22-早上7点关掉加热，蜂鸣器不响
-  95   2              night_flag = 1;
-  96   2          } else {
-  97   2              night_flag = 0;
-  98   2          }
-  99   1      }
- 100          void Temp_Show()
- 101          {
- 102   1          Read_Temp();
- 103   1      
- 104   1          sprintf(tmp_show, "temp:%.1f", T);
- 105   1          LCD_ShowString(1, 0, tmp_show);
- 106   1          if (T<Temp_low | T> Temp_high) {
- 107   2              if (night_flag == 0) {
- 108   3                  BUZZER = 1;
- 109   3              }
- 110   2              // 温度控制
- 111   2              if (T < Temp_low) {
- 112   3      
- 113   3                  LCD_ShowString(1, 9, "  cold!");
- 114   3                  RL1   = 1;
- 115   3                  count = 1;
-C51 COMPILER V9.54   MAIN                                                                  12/23/2024 11:38:08 PAGE 3   
+  64   1          // if (last_T != T) {
+  65   1          //     sprintf((char *)tmp_show, "%02d:%02d:%02d %.1f", DS1302_Time[3], DS1302_Time[4], DS1302_Time[5]
+             -, T);
+  66   1          //     for (i = 0; tmp_show[i] != '\0'; i++) {
+  67   1          //         // LCD_ShowString(2,10,"enetr");
+  68   1          //         AT24C02_WriteByte(FLASH_ADRESS, tmp_show[i]);
+  69   1          //         FLASH_ADRESS++;
+  70   1          //     }
+  71   1          //     last_T = T;
+  72   1          // }
+  73   1          char *test = "123";
+  74   1          char c;
+  75   1          char disp[3];
+  76   1          for (i = 0; test[i] != '\0'; i++) {
+  77   2              AT24C02_WriteByte(i, test[i]);
+  78   2              Delay(5);
+  79   2          }
+  80   1          for (i = 0; i <= 5; i++) {
+  81   2              c       = AT24C02_ReadByte(i);
+  82   2              disp[1] = c;
+  83   2              disp[2] = '\0';
+  84   2              // LCD_ShowString(2, 10 + i,disp);
+  85   2          }
+  86   1      }
+  87          void Read_Temp()
+  88          {
+  89   1          DS18B20_ConvertT();
+  90   1          T = DS18B20_ReadT();
+  91   1      }
+  92          // void Timer0_Routine() interrupt 1
+  93          // {
+  94          //     static unsigned int T0Count;
+  95          //     TL0 = 0x18; // 设置定时初值
+  96          //     TH0 = 0xFC; // 设置定时初值
+  97          //     T0Count++;
+  98          //     if (T0Count >= 500) // 每500ms进入一次
+  99          //     {
+ 100          //         T0Count          = 0;
+ 101          //         TimeSetFlashFlag = !TimeSetFlashFlag; // 闪烁标志位取反
+ 102          //     }
+ 103          // }
+ 104          void Night_Off_RL1(void)
+ 105          {
+ 106   1          if (DS1302_Time[3] >= 22 | DS1302_Time[3] <= 7) {
+ 107   2              RL1        = 0;
+ 108   2              BUZZER     = 0; // 晚上22-早上7点关掉加热，蜂鸣器不响
+ 109   2              night_flag = 1;
+ 110   2          } else {
+ 111   2              night_flag = 0;
+ 112   2          }
+ 113   1      }
+ 114          void Temp_Show()
+ 115          {
+C51 COMPILER V9.54   MAIN                                                                  12/23/2024 16:30:59 PAGE 3   
 
- 116   3      
- 117   3              } else if (T > Temp_high) {
- 118   3                  LCD_ShowString(1, 9, "  hot!");
- 119   3                  count = 1;
- 120   3                  RL1   = 0;
- 121   3              }
- 122   2          } else {
- 123   2              if (count == 1) {
- 124   3                  count = 0;
- 125   3                  LCD_ShowString(1, 9, "                "); // 清空第 1 行（16 个空格）
- 126   3              }
- 127   2              LCD_ShowString(1, 9, " Normal!"); // 显示 "Normal!"
- 128   2              BUZZER = 0;
- 129   2              RL1    = 0;
- 130   2          }
- 131   1      }
- 132          void TimeShow(void) // 时间显示功能
- 133          {
- 134   1          DS1302_ReadTime();                    // 读取时间
- 135   1                                                // LCD_ShowNum(1,1,DS1302_Time[0],2);//显示年
- 136   1                                                // LCD_ShowNum(1,4,DS1302_Time[1],2);//显示月
- 137   1                                                // LCD_ShowNum(1,7,DS1302_Time[2],2);//显示日
- 138   1                                                // LCD_ShowNum(2,1,DS1302_Time[3],2);//显示时
- 139   1                                                // LCD_ShowNum(2,4,DS1302_Time[4],2);//显示分
- 140   1                                                // LCD_ShowNum(2,7,DS1302_Time[5],2);//显示秒
- 141   1          LCD_ShowNum(2, 1, DS1302_Time[3], 2); // 显示时
- 142   1          LCD_ShowNum(2, 4, DS1302_Time[4], 2); // 显示分
- 143   1          LCD_ShowNum(2, 7, DS1302_Time[5], 2); // 显示秒
- 144   1      }
- 145          /**
- 146           * @brief  串口中断服务函数
- 147           * @param  无
- 148           * @retval 无
- 149           */
- 150          void UART_ISR() interrupt 4
- 151          {
- 152   1          uchar next;
- 153   1          // 处理接收中断
- 154   1          if (RI) {
- 155   2              RI   = 0; // 清接收中断标志
- 156   2              next = SBUF;
- 157   2              if (next != '\n') {
- 158   3                  Receive_String[CharCount++] = next;
- 159   3      
- 160   3              } else {
- 161   3                  Receive_String[CharCount] = '\0';
- 162   3                  sprintf(Temp_Show, "temp:%s", Receive_String);
- 163   3                  LCD_ShowString(1, 9, Temp_Show);
- 164   3      
- 165   3                  CharCount                 = 0;
- 166   3              }
- 167   2          }
- 168   1          // // 处理发送中断
- 169   1          // if (TI) {
- 170   1          //     TI = 0; // 清发送中断标志
- 171   1      
- 172   1          //     if (UART_TX_Head != UART_TX_Tail) {
- 173   1          //         // 发送下一个字节
- 174   1          //         SBUF         = UART_TX_Buffer[UART_TX_Tail];
- 175   1          //         UART_TX_Tail = (UART_TX_Tail + 1) % UART_TX_BUFFER_SIZE;
- 176   1          //     } else {
- 177   1          //         UART_TX_Busy = 0; // 无数据可发送，结束发送
-C51 COMPILER V9.54   MAIN                                                                  12/23/2024 11:38:08 PAGE 4   
+ 116   1          Read_Temp();
+ 117   1      
+ 118   1          sprintf(tmp_show, "temp:%.1f", T);
+ 119   1          LCD_ShowString(1, 0, tmp_show);
+ 120   1          if (T<Temp_low | T> Temp_high) {
+ 121   2              if (night_flag == 0) {
+ 122   3                  BUZZER = 1;
+ 123   3              }
+ 124   2              // 温度控制
+ 125   2              if (T < Temp_low) {
+ 126   3      
+ 127   3                  LCD_ShowString(1, 9, "  cold!");
+ 128   3                  RL1   = 1;
+ 129   3                  count = 1;
+ 130   3      
+ 131   3              } else if (T > Temp_high) {
+ 132   3                  LCD_ShowString(1, 9, "  hot!");
+ 133   3                  count = 1;
+ 134   3                  RL1   = 0;
+ 135   3              }
+ 136   2          } else {
+ 137   2              if (count == 1) {
+ 138   3                  count = 0;
+ 139   3                  LCD_ShowString(1, 9, "                "); // 清空第 1 行（16 个空格）
+ 140   3              }
+ 141   2              LCD_ShowString(1, 9, " Normal!"); // 显示 "Normal!"
+ 142   2              BUZZER = 0;
+ 143   2              RL1    = 0;
+ 144   2          }
+ 145   1      }
+ 146          void TimeShow(void) // 时间显示功能
+ 147          {
+ 148   1          DS1302_ReadTime();                    // 读取时间
+ 149   1                                                // LCD_ShowNum(1,1,DS1302_Time[0],2);//显示年
+ 150   1                                                // LCD_ShowNum(1,4,DS1302_Time[1],2);//显示月
+ 151   1                                                // LCD_ShowNum(1,7,DS1302_Time[2],2);//显示日
+ 152   1                                                // LCD_ShowNum(2,1,DS1302_Time[3],2);//显示时
+ 153   1                                                // LCD_ShowNum(2,4,DS1302_Time[4],2);//显示分
+ 154   1                                                // LCD_ShowNum(2,7,DS1302_Time[5],2);//显示秒
+ 155   1          LCD_ShowNum(2, 1, DS1302_Time[3], 2); // 显示时
+ 156   1          LCD_ShowNum(2, 4, DS1302_Time[4], 2); // 显示分
+ 157   1          LCD_ShowNum(2, 7, DS1302_Time[5], 2); // 显示秒
+ 158   1      }
+ 159          /**
+ 160           * @brief  串口中断服务函数
+ 161           * @param  无
+ 162           * @retval 无
+ 163           */
+ 164          void UART_ISR() interrupt 4
+ 165          {
+ 166   1          uchar next;
+ 167   1          // 处理接收中断
+ 168   1          if (RI) {
+ 169   2              RI   = 0; // 清接收中断标志
+ 170   2              next = SBUF;
+ 171   2              if (next != '\n') {
+ 172   3                  Receive_String[CharCount++] = next;
+ 173   3      
+ 174   3              } else {
+ 175   3                  Receive_String[CharCount] = '\0';
+ 176   3                  sprintf(Temp_Show, "temp:%s", Receive_String);
+ 177   3                  LCD_ShowString(1, 9, Temp_Show);
+C51 COMPILER V9.54   MAIN                                                                  12/23/2024 16:30:59 PAGE 4   
 
- 178   1          //     }
- 179   1          // }
- 180   1      }
+ 178   3      
+ 179   3                  CharCount = 0;
+ 180   3              }
+ 181   2          }
+ 182   1          // // 处理发送中断
+ 183   1          // if (TI) {
+ 184   1          //     TI = 0; // 清发送中断标志
+ 185   1      
+ 186   1          //     if (UART_TX_Head != UART_TX_Tail) {
+ 187   1          //         // 发送下一个字节
+ 188   1          //         SBUF         = UART_TX_Buffer[UART_TX_Tail];
+ 189   1          //         UART_TX_Tail = (UART_TX_Tail + 1) % UART_TX_BUFFER_SIZE;
+ 190   1          //     } else {
+ 191   1          //         UART_TX_Busy = 0; // 无数据可发送，结束发送
+ 192   1          //     }
+ 193   1          // }
+ 194   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    661    ----
-   CONSTANT SIZE    =     88    ----
+   CODE SIZE        =    599    ----
+   CONSTANT SIZE    =     72    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
-   DATA SIZE        =     37       1
+   DATA SIZE        =     27       7
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.

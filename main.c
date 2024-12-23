@@ -15,7 +15,7 @@ void Show_Reveive_data();
 void Save_Data();
 float T, last_T = 0;
 unsigned char *FLASH_ADRESS = (unsigned char *)0x00;
-unsigned char Time[10], CharCount = 0;
+unsigned char CharCount     = 0;
 uchar tmp_show[10];
 char *Receive_String;
 uchar count = 0, night_flag = 0;
@@ -23,11 +23,11 @@ uchar count = 0, night_flag = 0;
 int main()
 {
     Read_Temp();
-    Save_Data(); // 温度不一样就开始存储到Flash芯片里 时间格式24:60:60  T(4位)
+    // Save_Data(); // 温度不一样就开始存储到Flash芯片里 时间格式24:60:60  T(4位)
     LCD_Init();
 
     DS1302_Init();
-    Delay(1000);
+    // Delay(1000);
     DS1302_SetTime();
     LCD_ShowString(2, 1, "  :  :  ");
     while (1) {
@@ -52,22 +52,36 @@ int main()
         // 温度不一样就存储到FLASH中
         Save_Data();
         // 接收数据并展示
-        Show_Reveive_data();
+        // Show_Reveive_data();
     }
 }
-void Show_Reveive_data()
-{
-}
+// void Show_Reveive_data()
+// {
+// }
 void Save_Data()
 {
     uchar i;
-    if (last_T != T) {
-        sprintf((char *)tmp_show, "%02d:%02d:%02d %.1f", DS1302_Time[3], DS1302_Time[4], DS1302_Time[5], T);
-        for (i = 0; tmp_show[i] != '\0'; i++) {
-            AT24C02_WriteByte(*FLASH_ADRESS, tmp_show[i]);
-            FLASH_ADRESS++;
-        }
-        last_T = T;
+    // if (last_T != T) {
+    //     sprintf((char *)tmp_show, "%02d:%02d:%02d %.1f", DS1302_Time[3], DS1302_Time[4], DS1302_Time[5], T);
+    //     for (i = 0; tmp_show[i] != '\0'; i++) {
+    //         // LCD_ShowString(2,10,"enetr");
+    //         AT24C02_WriteByte(FLASH_ADRESS, tmp_show[i]);
+    //         FLASH_ADRESS++;
+    //     }
+    //     last_T = T;
+    // }
+    char *test = "123";
+    char c;
+    char disp[3];
+    for (i = 0; test[i] != '\0'; i++) {
+        AT24C02_WriteByte(i, test[i]);
+        Delay(5);
+    }
+    for (i = 0; i <= 5; i++) {
+        c       = AT24C02_ReadByte(i);
+        disp[1] = c;
+        disp[2] = '\0';
+        // LCD_ShowString(2, 10 + i,disp);
     }
 }
 void Read_Temp()
@@ -162,7 +176,7 @@ void UART_ISR() interrupt 4
             sprintf(Temp_Show, "temp:%s", Receive_String);
             LCD_ShowString(1, 9, Temp_Show);
 
-            CharCount                 = 0;
+            CharCount = 0;
         }
     }
     // // 处理发送中断
