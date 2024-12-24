@@ -7,42 +7,30 @@
 #include "DS1302.h"
 #include "AT24C02.h"
 #include "UART.h"
+#include "string.h"
+#include <stdlib.h>
 void Read_Temp();
 void Temp_Show();
 void TimeShow(void);
 void Night_Off_RL1(void);
-void Show_Reveive_data();
+void Send_Temp_History();
 void Save_Data();
-float T, last_T = 0;
-unsigned char *FLASH_ADRESS = (unsigned char *)0x00;
-unsigned char CharCount     = 0;
+uchar *Read_Data();
+float T = 0, last_T = 0;
+char FLASH_SIZE         = 0;
+unsigned char CharCount = 0;
 uchar tmp_show[10];
-char *Receive_String;
 uchar count = 0, night_flag = 0;
-
 int main()
 {
     Read_Temp();
     // Save_Data(); // 温度不一样就开始存储到Flash芯片里 时间格式24:60:60  T(4位)
     LCD_Init();
-
+    UART_Init();
     DS1302_Init();
-    // Delay(1000);
     DS1302_SetTime();
     LCD_ShowString(2, 1, "  :  :  ");
     while (1) {
-        // 读取按键设置时间
-        // KeyNum = Key();
-        // if (KeyNum == 1) {
-        //     if (MODE == 0) {
-        //         MODE = 1;
-        //         TimeShow();
-        //     }
-        //     if (MODE == 1) {
-        //         MODE = 0;
-        //         Time_Set();
-        //     }
-        // }
         // 时间展示
         TimeShow();
         // 温度展示
@@ -50,57 +38,104 @@ int main()
         // 夜晚控制
         Night_Off_RL1();
         // 温度不一样就存储到FLASH中
-        Save_Data();
-        // 接收数据并展示
-        // Show_Reveive_data();
+        if (T != last_T) {
+
+            Save_Data();
+        }
+        // 接收到AT指令就把温度历史记录发送给串口终端
+        // Send_Temp_History();
+        Read_Data();
     }
 }
-// void Show_Reveive_data()
+// void Send_Temp_History()
 // {
+//     char *SendString;
+//     Receive_String = UART_GetString();
+//     if (strstr(Receive_String, "AT+T")) {
+//         SendString = Read_Data();
+//         LCD_ShowString(2, 1, SendString);
+//         UART_SendString(SendString);
+//         UART_SendString("\r\n");
+//     }
 // }
 void Save_Data()
 {
     uchar i;
-    // if (last_T != T) {
-    //     sprintf((char *)tmp_show, "%02d:%02d:%02d %.1f", DS1302_Time[3], DS1302_Time[4], DS1302_Time[5], T);
-    //     for (i = 0; tmp_show[i] != '\0'; i++) {
-    //         // LCD_ShowString(2,10,"enetr");
-    //         AT24C02_WriteByte(FLASH_ADRESS, tmp_show[i]);
-    //         FLASH_ADRESS++;
-    //     }
-    //     last_T = T;
+    uchar temp_show_size = 0;
+    sprintf((char *)tmp_show, "%.0f|", T);
+    temp_show_size = strlen(tmp_show);
+    for (i = 0; tmp_show[i] != '\0'; i++) {
+        // 为了保持演示效果，35-55我存入，否则一些混乱数据就存进去了
+        if (T >= 35 && T <= 55) {
+            AT24C02_WriteByte(FLASH_SIZE, tmp_show[i]);
+            Delay(10);
+            FLASH_SIZE++;
+        }
+    }
+    last_T = T;
+    // char *test = "abcd";
+    // char c;
+    // char disp[2];
+    // for (i = 0; test[i] != '\0'; i++) {
+    //     AT24C02_WriteByte(i, test[i]);
+    //     Delay(10);
     // }
-    char *test = "123";
-    char c;
-    char disp[3];
-    for (i = 0; test[i] != '\0'; i++) {
-        AT24C02_WriteByte(i, test[i]);
-        Delay(5);
+    // for (i = 0; i < 4; i++) {
+    //     c       = AT24C02_ReadByte(i);
+    //     disp[0] = c;
+    //     disp[1] = '\0';
+    //     LCD_ShowString(2, 10 + i,disp);
+    // }
+}
+uchar *Read_Data()
+{
+    uchar i;
+    char ch[21];
+    char *test;
+    uchar *Receive_String;
+    uchar *location;
+    Receive_String = UART_GetString();
+    // memset(StrBUFF, 0, 20);
+    if (strstr(Receive_String, "AT+T")) {
+        for (i = 0; i < FLASH_SIZE; i++) {
+            // 发送数据到电脑端
+            ch[i] = AT24C02_ReadByte(i);
+            // UART
+        }
+        ch[FLASH_SIZE] = '\0';
+        // LCD_ShowString(2, 1, ch);
+        // LCD_ShowString(2, 10, (char *)FLASH_SIZE);
+        UART_SendString(ch);
+        UART_SendString("\r\n");
     }
-    for (i = 0; i <= 5; i++) {
-        c       = AT24C02_ReadByte(i);
-        disp[1] = c;
-        disp[2] = '\0';
-        // LCD_ShowString(2, 10 + i,disp);
+    if (strstr(Receive_String, "AT+Stop")) {
+        return;
     }
+    if (strstr(Receive_String, "AT+Begin")) {
+        RL1 = 1;
+        return;
+    }
+    if (strstr(Receive_String, "AT+End")) {
+        RL1 = 0;
+        return;
+    }
+    if (strstr(Receive_String, "t")) {
+        // sprintf(test, "%d%d", Receive_String[1], Receive_String[2]);
+        // DS1302_Time[3] = atoi(test);
+        // sprintf(test, "%d%d", Receive_String[3], Receive_String[4]);
+        // DS1302_Time[4] = atoi(test);
+        // sprintf(test, "%d%d", Receive_String[5], Receive_String[6]);
+        // DS1302_Time[5] = atoi(test);
+        // DS1302_SetTime();
+        return;
+    }
+    return ch;
 }
 void Read_Temp()
 {
     DS18B20_ConvertT();
     T = DS18B20_ReadT();
 }
-// void Timer0_Routine() interrupt 1
-// {
-//     static unsigned int T0Count;
-//     TL0 = 0x18; // 设置定时初值
-//     TH0 = 0xFC; // 设置定时初值
-//     T0Count++;
-//     if (T0Count >= 500) // 每500ms进入一次
-//     {
-//         T0Count          = 0;
-//         TimeSetFlashFlag = !TimeSetFlashFlag; // 闪烁标志位取反
-//     }
-// }
 void Night_Off_RL1(void)
 {
     if (DS1302_Time[3] >= 22 | DS1302_Time[3] <= 7) {
@@ -115,8 +150,8 @@ void Temp_Show()
 {
     Read_Temp();
 
-    sprintf(tmp_show, "temp:%.1f", T);
-    LCD_ShowString(1, 0, tmp_show);
+    sprintf(tmp_show, "temp:%3.0f", T);
+    LCD_ShowString(1, 1, tmp_show);
     if (T<Temp_low | T> Temp_high) {
         if (night_flag == 0) {
             BUZZER = 1;
@@ -155,40 +190,4 @@ void TimeShow(void) // 时间显示功能
     LCD_ShowNum(2, 1, DS1302_Time[3], 2); // 显示时
     LCD_ShowNum(2, 4, DS1302_Time[4], 2); // 显示分
     LCD_ShowNum(2, 7, DS1302_Time[5], 2); // 显示秒
-}
-/**
- * @brief  串口中断服务函数
- * @param  无
- * @retval 无
- */
-void UART_ISR() interrupt 4
-{
-    uchar next;
-    // 处理接收中断
-    if (RI) {
-        RI   = 0; // 清接收中断标志
-        next = SBUF;
-        if (next != '\n') {
-            Receive_String[CharCount++] = next;
-
-        } else {
-            Receive_String[CharCount] = '\0';
-            sprintf(Temp_Show, "temp:%s", Receive_String);
-            LCD_ShowString(1, 9, Temp_Show);
-
-            CharCount = 0;
-        }
-    }
-    // // 处理发送中断
-    // if (TI) {
-    //     TI = 0; // 清发送中断标志
-
-    //     if (UART_TX_Head != UART_TX_Tail) {
-    //         // 发送下一个字节
-    //         SBUF         = UART_TX_Buffer[UART_TX_Tail];
-    //         UART_TX_Tail = (UART_TX_Tail + 1) % UART_TX_BUFFER_SIZE;
-    //     } else {
-    //         UART_TX_Busy = 0; // 无数据可发送，结束发送
-    //     }
-    // }
 }

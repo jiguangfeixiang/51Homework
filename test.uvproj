@@ -399,11 +399,6 @@
               <FilePath>.\driver\SRC\DS1302.c</FilePath>
             </File>
             <File>
-              <FileName>Timer0.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\driver\SRC\Timer0.c</FilePath>
-            </File>
-            <File>
               <FileName>LCD1602.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\driver\SRC\LCD1602.c</FilePath>
